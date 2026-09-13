@@ -16,6 +16,12 @@ on:
 permissions:
   contents: write
 
+# กันไม่ให้ workflow รันซ้อนกันหลายรอบพร้อมกัน (เช่น กด Run workflow ซ้ำ หรือ cron 2 ช่วงเวลาทับกัน)
+# ถ้ามีรอบใหม่เข้ามาระหว่างที่รอบเก่ายังไม่เสร็จ จะ "รอคิว" แทนที่จะรันพร้อมกัน
+concurrency:
+  group: fng-trader-daily-run
+  cancel-in-progress: false
+
 jobs:
   run-trading-bot:
     runs-on: ubuntu-latest
@@ -47,5 +53,11 @@ jobs:
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action Bot"
           git add data/state.json data/trade_log.csv
-          git diff --quiet --cached || git commit -m "Update state and trade log [skip ci]"
+          if git diff --quiet --cached; then
+            echo "ไม่มีอะไรเปลี่ยนแปลง - ข้ามการ commit"
+            exit 0
+          fi
+          git commit -m "Update state and trade log [skip ci]"
+          # ดึงข้อมูลล่าสุดมารวมก่อน push กันกรณีมีการ push อื่นแทรกเข้ามา (rebase ทับ commit ของเราไว้บนสุด)
+          git pull --rebase origin main || true
           git push
