@@ -1,0 +1,45 @@
+name: Daily FNG Trading Simulation
+
+on:
+  schedule:
+    # รันทุกวัน 23:00 UTC = 06:00 น. เวลาไทย (ปรับเวลาได้ตามต้องการ)
+    - cron: "0 23 * * *"
+  workflow_dispatch: {}   # ให้กดรันเองได้จากแท็บ Actions
+
+# สำคัญ: ต้องให้สิทธิ์เขียนกลับเข้า repo เพื่อบันทึก state.json / trade_log.csv
+permissions:
+  contents: write
+
+jobs:
+  run-trading-bot:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run daily strategy
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          SMTP_HOST: ${{ secrets.SMTP_HOST }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+          EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
+          EMAIL_TO: ${{ secrets.EMAIL_TO }}
+        run: python main.py
+
+      - name: Commit updated state & trade log
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action Bot"
+          git add data/state.json data/trade_log.csv
+          git diff --quiet --cached || git commit -m "Update state and trade log [skip ci]"
+          git push
