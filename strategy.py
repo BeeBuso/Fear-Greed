@@ -24,6 +24,7 @@ def _default_state() -> dict:
             "buy_every_other": None,
             "sell_every_other": None,
         },
+        "last_run_date": None,   # กันการรันซ้ำในวันเดียวกัน (วันที่อ้างอิงตามเวลาตลาดนิวยอร์ก)
         "created_at": str(date.today()),
     }
 
@@ -82,6 +83,16 @@ def _mark_alt_zone_action(state: dict, zone: str, today_str: str, acted: bool) -
     else:
         # ข้ามรอบนี้ -> ครั้งถัดไปให้ทำ
         state[toggle_key] = False
+
+
+def has_run_today(run_date: str) -> bool:
+    """เช็คว่าระบบทำรายการของวันนี้ (ตามวันที่ตลาดนิวยอร์ก) ไปแล้วหรือยัง"""
+    state = load_state()
+    return state.get("last_run_date") == run_date
+
+
+def _mark_run_today(state: dict, run_date: str) -> None:
+    state["last_run_date"] = run_date
 
 
 def execute_daily_strategy(fng_score: float, prices: dict, usdthb: float, run_date: str = None) -> dict:
@@ -174,6 +185,7 @@ def execute_daily_strategy(fng_score: float, prices: dict, usdthb: float, run_da
     # อัปเดต toggle ของโซนวันเว้นวัน (ทำครั้งเดียวต่อวัน ไม่ใช่ต่อ ticker)
     any_executed = any(r["executed"] for r in trades)
     _mark_alt_zone_action(state, zone, run_date, acted=should_act)
+    _mark_run_today(state, run_date)
 
     save_state(state)
     _append_trade_log(trades)

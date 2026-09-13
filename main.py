@@ -19,11 +19,27 @@ import strategy
 import report
 import notify_discord
 import notify_email
+import market_hours
 
 
 def main():
-    today = str(date.today())
-    print(f"=== เริ่มรันระบบวันที่ {today} ===")
+    # 1. เช็คว่าตลาดหุ้นสหรัฐฯ เปิดอยู่จริงหรือไม่ (รวมวันหยุดตลาด ไม่ใช่แค่เสาร์-อาทิตย์)
+    market_open, reason = market_hours.is_market_open_now()
+    ny_date = market_hours.get_ny_date_str()
+    print(f"เวลาตลาดนิวยอร์กตอนนี้: {market_hours.get_ny_now()}")
+    print(f"สถานะตลาด: {'เปิด' if market_open else 'ปิด'} - {reason}")
+
+    if not market_open:
+        print(f"[skip] {reason} — ไม่ทำการซื้อขายวันนี้")
+        return
+
+    # 2. กันการรันซ้ำในวันเดียวกัน (เผื่อ cron รันมากกว่า 1 ครั้ง/วันเพราะ DST)
+    if strategy.has_run_today(ny_date):
+        print(f"[skip] วันที่ {ny_date} (เวลานิวยอร์ก) ทำรายการไปแล้ว — ข้ามการรันซ้ำ")
+        return
+
+    today = ny_date
+    print(f"=== เริ่มรันระบบวันที่ {today} (อ้างอิงวันที่ตลาดนิวยอร์ก) ===")
 
     # 1. Fear & Greed Index
     try:
