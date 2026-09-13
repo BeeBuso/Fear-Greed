@@ -66,11 +66,11 @@ TRADE_LOG_FILE = os.path.join(DATA_DIR, "trade_log.csv")
 # ---------- Discord / Email (ตั้งค่าผ่าน Environment Variables / GitHub Secrets) ----------
 DISCORD_WEBHOOK_URL = os.environ.get("DISCORD_WEBHOOK_URL", "")
 
-SMTP_HOST = os.environ.get("SMTP_HOST", "smtp.gmail.com")
-SMTP_PORT = int(os.environ.get("SMTP_PORT", "587"))
+SMTP_HOST = os.environ.get("SMTP_HOST") or "smtp.gmail.com"
+SMTP_PORT = int(os.environ.get("SMTP_PORT") or "587")
 SMTP_USER = os.environ.get("SMTP_USER", "")
 SMTP_PASSWORD = os.environ.get("SMTP_PASSWORD", "")   # ใช้ App Password ถ้าเป็น Gmail
-EMAIL_FROM = os.environ.get("EMAIL_FROM", SMTP_USER)
+EMAIL_FROM = os.environ.get("EMAIL_FROM") or SMTP_USER
 EMAIL_TO = os.environ.get("EMAIL_TO", "")             # คั่นด้วย , ถ้าส่งหลายคน
 
 # ---------- อัตราแลกเปลี่ยน ----------
