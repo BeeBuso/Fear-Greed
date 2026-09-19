@@ -1,0 +1,36 @@
+name: Test Notifications (Discord + Email)
+
+# กดรันเองได้จากแท็บ Actions เท่านั้น ไม่มีการรันอัตโนมัติ
+# ใช้ทดสอบว่า Discord/Email ทำงานถูกต้อง โดยไม่ต้องรอเวลาตลาดเปิด
+# ไม่มีการซื้อขายเกิดขึ้นจริง ไม่แก้ไขไฟล์ state.json ใดๆ (จึงไม่มีขั้นตอน commit กลับ)
+on:
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  test-notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Send test notifications
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          SMTP_HOST: ${{ secrets.SMTP_HOST }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+          EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
+          EMAIL_TO: ${{ secrets.EMAIL_TO }}
+        run: python test_notify.py
