@@ -62,6 +62,10 @@ def is_alternate_zone(zone: str) -> bool:
 DATA_DIR = os.path.join(os.path.dirname(__file__), "data")
 STATE_FILE = os.path.join(DATA_DIR, "state.json")
 TRADE_LOG_FILE = os.path.join(DATA_DIR, "trade_log.csv")
+PORTFOLIO_HISTORY_FILE = os.path.join(DATA_DIR, "portfolio_history.csv")
+
+# ลำดับบัญชี/ID กำกับแต่ละหุ้น (แต่ละตัวคือ 1 บัญชีอิสระ แยกเงินสด/พอร์ตกันสมบูรณ์)
+TICKER_ACCOUNT_ID = {ticker: idx + 1 for idx, ticker in enumerate(TICKERS)}
 
 # ---------- Discord / Email (ตั้งค่าผ่าน Environment Variables / GitHub Secrets) ----------
 DISCORD_WEBHOOK_URL = os.environ.get("DISCORD_WEBHOOK_URL", "")

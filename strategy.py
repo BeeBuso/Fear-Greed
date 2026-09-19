@@ -18,6 +18,7 @@ def _default_state() -> dict:
         # เงินสดแยกกระเป๋าต่อหุ้น ตัวละ PER_TICKER_CAPITAL_THB บาท (ไม่ใช้ร่วมกัน)
         "cash_thb": {t: config.PER_TICKER_CAPITAL_THB for t in config.TICKERS},
         "holdings": {t: 0.0 for t in config.TICKERS},   # จำนวนหน่วยหุ้นที่ถืออยู่ (เศษหุ้นได้)
+        "total_bought_units": {t: 0.0 for t in config.TICKERS},  # จำนวนหน่วยที่ซื้อสะสมทั้งหมด (ไม่ลดแม้ขายออก)
         "cost_basis_thb": {t: 0.0 for t in config.TICKERS},  # ต้นทุนสะสม (บาท) ต่อหุ้นแต่ละตัว
         # ใช้ track โซนแบบ "วันเว้นวัน": เก็บว่าล่าสุดทำรายการ (ในโซนนั้น) วันไหน
         "alt_zone_last_action_date": {
@@ -36,7 +37,20 @@ def load_state() -> dict:
         save_state(state)
         return state
     with open(config.STATE_FILE, "r", encoding="utf-8") as f:
-        return json.load(f)
+        state = json.load(f)
+
+    # เติม field ใหม่ที่อาจไม่มีใน state.json เก่า (กัน error กับ state ที่สร้างด้วยโค้ดเวอร์ชันก่อนหน้า)
+    if "total_bought_units" not in state:
+        state["total_bought_units"] = {t: state["holdings"].get(t, 0.0) for t in config.TICKERS}
+    if "last_run_date" not in state:
+        state["last_run_date"] = None
+    for t in config.TICKERS:
+        state["holdings"].setdefault(t, 0.0)
+        state["cash_thb"].setdefault(t, config.PER_TICKER_CAPITAL_THB)
+        state["cost_basis_thb"].setdefault(t, 0.0)
+        state["total_bought_units"].setdefault(t, 0.0)
+
+    return state
 
 
 def save_state(state: dict) -> None:
@@ -148,6 +162,7 @@ def execute_daily_strategy(fng_score: float, prices: dict, usdthb: float, run_da
             units_bought = config.ORDER_SIZE_THB / price_thb
             state["cash_thb"][t] -= config.ORDER_SIZE_THB
             state["holdings"][t] += units_bought
+            state["total_bought_units"][t] += units_bought
             state["cost_basis_thb"][t] += config.ORDER_SIZE_THB
 
             row["executed"] = True
