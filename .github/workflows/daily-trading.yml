@@ -55,7 +55,11 @@ jobs:
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action Bot"
-          git add data/state.json data/trade_log.csv data/portfolio_history.csv
+          for f in data/state.json data/trade_log.csv data/portfolio_history.csv; do
+            if [ -f "$f" ]; then
+              git add "$f"
+            fi
+          done
           if git diff --quiet --cached; then
             echo "ไม่มีอะไรเปลี่ยนแปลง - ข้ามการ commit"
             exit 0
