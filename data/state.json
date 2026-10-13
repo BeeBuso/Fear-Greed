@@ -37,8 +37,8 @@
     "sell_every_other": null
   },
   "created_at": "2026-09-13",
-  "buy_every_other_toggle": true,
-  "last_run_date": "2026-10-09",
+  "buy_every_other_toggle": false,
+  "last_run_date": "2026-10-13",
   "total_bought_units": {
     "SPY": 0.01749781033935428,
     "VOO": 0.019019731593316533,
